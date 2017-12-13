@@ -1,8 +1,8 @@
-package cloudlink.service.billing.ec2;
+package cloudlink.service.billing.cf;
 
 import com.google.gson.JsonObject;
 
-public interface EC2BillingTableService {
+public interface CFBillingTableService {
 
 	/*************************************************************
 	 **************************** CSV ****************************
@@ -11,17 +11,17 @@ public interface EC2BillingTableService {
 	/**
 	 *  create table
 	 */
-	public void createEC2Table_CSV();
+	public void createCFTable_CSV();
 	
 	/**
 	 * insert data
 	 */
-	public void insertEC2Data_CSV(String primaryKey, JsonObject obj);
+	public void insertCFData_CSV(String primaryKey, JsonObject obj);
 	
 	/**
 	 * Scan data
 	 */
-	public void scanEC2Data();
+	public void scanCFData();
 	
 	
 	/*************************************************************

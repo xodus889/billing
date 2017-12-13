@@ -3,18 +3,13 @@
 
 package com.amazonaws.samples;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.PutItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 
-public class MoviesItemOps01 {
+public class MoviesDeleteTableTest {
 
     public static void main(String[] args) throws Exception {
 
@@ -26,25 +21,16 @@ public class MoviesItemOps01 {
 
         Table table = dynamoDB.getTable("Movies");
 
-        int year = 2015;
-        String title = "The Big New Movie";
-
-        final Map<String, Object> infoMap = new HashMap<String, Object>();
-        infoMap.put("plot", "Nothing happens at all.");
-        infoMap.put("rating", 0);
-
         try {
-            System.out.println("Adding a new item...");
-            PutItemOutcome outcome = table
-                .putItem(new Item().withPrimaryKey("year", year, "title", title).withMap("info", infoMap));
-
-            System.out.println("PutItem succeeded:\n" + outcome.getPutItemResult());
+            System.out.println("Attempting to delete table; please wait...");
+            table.delete();
+            table.waitForDelete();
+            System.out.print("Success.");
 
         }
         catch (Exception e) {
-            System.err.println("Unable to add item: " + year + " " + title);
+            System.err.println("Unable to delete table: ");
             System.err.println(e.getMessage());
         }
-
     }
 }

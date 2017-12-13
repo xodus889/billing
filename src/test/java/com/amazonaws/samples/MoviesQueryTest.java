@@ -16,7 +16,7 @@ import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 
-public class MoviesQuery {
+public class MoviesQueryTest {
 
     public static void main(String[] args) throws Exception {
 

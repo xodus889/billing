@@ -1,7 +1,8 @@
-package cloudlink.service.billing.ec2;
+package cloudlink.service.billing.cf;
 
 import java.util.Arrays;
 
+import org.junit.Test;
 import org.springframework.stereotype.Service;
 
 import com.amazonaws.client.builder.AwsClientBuilder;
@@ -18,7 +19,7 @@ import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.gson.JsonObject;
 
 @Service
-public class EC2BillingTableServiceImpl implements EC2BillingTableService {
+public class CFBillingTableServiceImpl implements CFBillingTableService {
 
 	/**
 	 * 여긴 나중에 정리
@@ -35,12 +36,13 @@ public class EC2BillingTableServiceImpl implements EC2BillingTableService {
 	/*************************************************************
 	 **************************** CSV ****************************
 	 *************************************************************/
-	public static final String CSV_TABLE_NAME = "CSV_AWS_ECS";
+	public static final String CSV_TABLE_NAME = "CSV_AWS_CF";
 	public static final String CSV_PARTITION_KEY = "RateCode";
 	public static final String CSV_SORT_KEY = "";
 
 	@Override
-	public void createEC2Table_CSV() {
+	@Test
+	public void createCFTable_CSV() {
 
 		try {
 
@@ -48,7 +50,7 @@ public class EC2BillingTableServiceImpl implements EC2BillingTableService {
 			Table table = dynamoDB.createTable(CSV_TABLE_NAME,
 					Arrays.asList(new KeySchemaElement(CSV_PARTITION_KEY, KeyType.HASH)),
 					Arrays.asList(new AttributeDefinition(CSV_PARTITION_KEY, ScalarAttributeType.S)),
-					new ProvisionedThroughput(10L, 10L));
+					new ProvisionedThroughput(1L, 1L));
 			
 			table.waitForActive();
 			System.out.println("Success.  Table status: " + table.getDescription().getTableStatus());
@@ -61,17 +63,15 @@ public class EC2BillingTableServiceImpl implements EC2BillingTableService {
 	}
 
 	@Override
-	public void insertEC2Data_CSV(String primaryKey, JsonObject obj) {
+	public void insertCFData_CSV(String primaryKey, JsonObject obj) {
 
 		Table table = dynamoDB.getTable(CSV_TABLE_NAME);
-		System.out.println(obj.toString());
-		
 		table.putItem(new Item().withPrimaryKey(CSV_PARTITION_KEY, primaryKey).withJSON("info", obj.toString()));
 		
 	}
 
 	@Override
-	public void scanEC2Data() {
+	public void scanCFData() {
 		// TODO Auto-generated method stub
 
 	}

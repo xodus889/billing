@@ -17,7 +17,7 @@ import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 
-public class MoviesScan {
+public class MoviesScanTest {
 
     public static void main(String[] args) throws Exception {
 
