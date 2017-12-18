@@ -1,9 +1,8 @@
-package cloudlink.service.billing.cf;
+package cloudlink.service.billing;
 
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.springframework.stereotype.Service;
 
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -18,8 +17,9 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.google.gson.JsonObject;
 
-@Service
-public class CFBillingTableServiceImpl implements CFBillingTableService {
+import cloudlink.domin.bililng.ComDomain;
+
+public class CRUDBililngTable {
 
 	/**
 	 * 여긴 나중에 정리
@@ -29,27 +29,20 @@ public class CFBillingTableServiceImpl implements CFBillingTableService {
 			new AwsClientBuilder.EndpointConfiguration("http://localhost:8000", "ap-northeast-2")).build();
 
 	DynamoDB dynamoDB = new DynamoDB(client);
-	// --------------------------------------
-	
-	
-	
-	/*************************************************************
-	 **************************** CSV ****************************
-	 *************************************************************/
-	public static final String CSV_TABLE_NAME = "CSV_AWS_CF";
-	public static final String CSV_PARTITION_KEY = "RateCode";
-	public static final String CSV_SORT_KEY = "";
 
-	@Override
+
+	/**
+	 * table을 생성한다
+	 */
 	@Test
-	public void createCFTable_CSV() {
+	public void createTable() {
 
 		try {
 
 			System.out.println("Attempting to create table; please wait...");
-			Table table = dynamoDB.createTable(CSV_TABLE_NAME,
-					Arrays.asList(new KeySchemaElement(CSV_PARTITION_KEY, KeyType.HASH)),
-					Arrays.asList(new AttributeDefinition(CSV_PARTITION_KEY, ScalarAttributeType.S)),
+			Table table = dynamoDB.createTable(ComDomain.TABLE_NAME,
+					Arrays.asList(new KeySchemaElement(ComDomain.PRIMARY_KEY, KeyType.HASH), new KeySchemaElement(ComDomain.SORT_KEY, KeyType.RANGE)),
+					Arrays.asList(new AttributeDefinition(ComDomain.PRIMARY_KEY, ScalarAttributeType.S), new AttributeDefinition(ComDomain.SORT_KEY, ScalarAttributeType.S)),
 					new ProvisionedThroughput(1L, 1L));
 			
 			table.waitForActive();
@@ -62,15 +55,24 @@ public class CFBillingTableServiceImpl implements CFBillingTableService {
 
 	}
 
-	@Override
-	public void insertCFData_CSV(String primaryKey, JsonObject obj) {
+	/**
+	 * key를 insert한다 
+	 */
+	public void insertData(String primaryKey, String sortKey, JsonObject obj) {
 
-		Table table = dynamoDB.getTable(CSV_TABLE_NAME);
-		table.putItem(new Item().withPrimaryKey(CSV_PARTITION_KEY, primaryKey).withJSON("info", obj.toString()));
+		Table table = dynamoDB.getTable(ComDomain.TABLE_NAME);
+		
+		Item item = new Item().withPrimaryKey(ComDomain.PRIMARY_KEY, primaryKey, ComDomain.SORT_KEY, sortKey);
+
+		item.withString("111", "222");
+		item.withString("333", "444");
+		item.withString("555", "666");
+		
+		
+		table.putItem(item);
 		
 	}
 
-	@Override
 	public void scanCFData() {
 		// TODO Auto-generated method stub
 
