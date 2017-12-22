@@ -1,4 +1,4 @@
-package cloudlink.service.billing;
+package cloudlink.service.dynamodb;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -6,36 +6,33 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
-import com.google.gson.JsonObject;
-
-import cloudlink.domin.bililng.ComDomain;
+import cloudlink.domain.dynamodb.DynamodbDomain;
 
 
-public class HandleBilingData {
+public class HandlingDynamodbServiceImpl implements HandlingDynamdodbService {
 
-	CRUDBililngTable service 	= new CRUDBililngTable();
+	DynamodbServiceImpl service 	= new DynamodbServiceImpl();
 	private String path 		= "";	// csv 파일을 읽어들일 path
 	
 	/**
 	 *	파일 읽어들일 path 초기화 
 	 */
-	public HandleBilingData(String path) {
-		
+	public HandlingDynamodbServiceImpl(String path) {
 		this.path = path;
 	}
 	
-	/**
-	 * csv 파일을 한줄씩 읽고 데이터 가공 후 dynamodb에 insert 한다 
-	 */
+	@Override
 	public void readFileInsertData() {
 		
-		BufferedReader br 	= null;
-		String[] keys 		= null;
-		JsonObject json		= new JsonObject();
-		String[] version	= null;
-		String[] sortKey 	= null;
+		Map<String, String> map = new HashMap<>();
+		BufferedReader br 		= null;
+		String[] keys 			= null;
+		String version		= null;
+		String sortKey 		= null;
 		String line;
 
 		try {
@@ -48,25 +45,25 @@ public class HandleBilingData {
 				// 반환된 json과 primarykey로  insert한다.
 				if(keys != null) {
 					
-					json 				= makeJsonObject(keys, splitString(line));
-					String primaryKey 	= subtractString(json.get(ComDomain.CSV_KEY).toString());
+					map 				= changeToMap(keys, splitString(line));
+					String primaryKey 	= map.get(DynamodbDomain.CSV_KEY);
 					
-					service.insertData(primaryKey, sortKey[1], json);
+					service.insertData(primaryKey, sortKey, version, map);
 				}
 					
 				// 호출한 행에 SKU가 있다면 그 행은 Key값이다
-				if (line.contains(ComDomain.CSV_KEY)) {
+				if(line.contains(DynamodbDomain.CSV_KEY)) {
 					keys = splitString(line);
 				}
 				
 				// 호출한 행에 Version이 있다면 version값 가져오기
-				if (line.contains(ComDomain.VERSION)) {
-					version = splitString(line);
+				if(line.contains(DynamodbDomain.VERSION)) {
+					version = subtractString(splitString(line)[1]);
 				}
 				
 				// 호출한 행에 OfferCode가 있다면 OfferCode가져오기
-				if (line.contains(ComDomain.SORT_KEY)) {
-					sortKey = splitString(line);
+				if(line.contains(DynamodbDomain.SORT_KEY)) {
+					sortKey = subtractString(splitString(line)[1]);
 				}
 			}
 
@@ -83,50 +80,43 @@ public class HandleBilingData {
 		
 	}
 	
-	/**
-	 *  예: "desc,desc" ,,,,,  와 같은 pattern을 ',' 으로 구분할 때
-	 *  "desc,desc" , , , , , 처럼 split하기 위해서 정규식 사용해야 함 
-	 */
+	@Override
 	public String[] splitString(String line) {
 	
 		Pattern splitter = Pattern.compile(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
 		return splitter.split(line);
 	}
 	
-	/**
-	 * String 타입의 key와 value를 json 타입으로 변환하여 return한다 
-	 */
-	public JsonObject makeJsonObject(String[] keys, String[] values) {
+	@Override
+	public Map<String, String> changeToMap(String[] keys, String[] values) {
 		
-		JsonObject obj 	= new JsonObject();
-		String temp		= null;
+		Map<String, String> map = new HashMap<>();
+		String temp				= null;
 		
 		for(int i = 0; i < keys.length; i++) {
 			
 			// csv 파일에서 끝 열이 공백일 경우 행의 길이가 공백수 만큼 더 적게 들어온다
 			// 공백은 임의의 값으로 채운다
 			if(i >= values.length) {
-				temp = ComDomain.NULL;
+				temp = DynamodbDomain.NULL;
 			} else {
 				temp = subtractString(values[i]);
 			}
  			
 			if(temp.length() == 0)
-				temp = ComDomain.NULL;
+				temp = DynamodbDomain.NULL;
+			
+			map.put(subtractString(keys[i]), temp);
+			
+			System.out.println(subtractString(keys[i]));
+			System.out.println(temp);
 
-			obj.addProperty(subtractString(keys[i]), temp); // "\"value"\" -> "value"로 변환
 		}
 		
-		System.out.println("length : " + obj.size());
-		System.out.println(obj);
-
-		return obj;
+		return map;
 	}
 	
-	/**
-	 * String 변환함수
-	 * "\"value"\" -> "value"로 변환
-	 */
+	@Override
 	public String subtractString(String str) {
 		
 		return str.replaceAll("\"", "");

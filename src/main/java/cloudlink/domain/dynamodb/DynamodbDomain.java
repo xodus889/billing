@@ -1,11 +1,11 @@
-package cloudlink.domin.bililng;
+package cloudlink.domain.dynamodb;
 
 /**
  * @author taeyeonkim
  *
  * Billing 관련 table 만들 때 필요한 key 또는 변수정보
  */
-public class ComDomain {
+public class DynamodbDomain {
 
 	/**
 	 * TABLE 관련

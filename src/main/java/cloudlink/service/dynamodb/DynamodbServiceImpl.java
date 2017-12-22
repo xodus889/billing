@@ -1,8 +1,7 @@
-package cloudlink.service.billing;
+package cloudlink.service.dynamodb;
 
 import java.util.Arrays;
-
-import org.junit.Test;
+import java.util.Map;
 
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -15,11 +14,10 @@ import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.google.gson.JsonObject;
 
-import cloudlink.domin.bililng.ComDomain;
+import cloudlink.domain.dynamodb.DynamodbDomain;
 
-public class CRUDBililngTable {
+public class DynamodbServiceImpl implements DynamodbService{
 
 	/**
 	 * 여긴 나중에 정리
@@ -28,21 +26,22 @@ public class CRUDBililngTable {
 	AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().withEndpointConfiguration(
 			new AwsClientBuilder.EndpointConfiguration("http://localhost:8000", "ap-northeast-2")).build();
 
+
+
+//	
+//	AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().withRegion(Regions.AP_NORTHEAST_2).build(); 
+
 	DynamoDB dynamoDB = new DynamoDB(client);
-
-
-	/**
-	 * table을 생성한다
-	 */
-	@Test
+	
+	@Override
 	public void createTable() {
 
 		try {
 
 			System.out.println("Attempting to create table; please wait...");
-			Table table = dynamoDB.createTable(ComDomain.TABLE_NAME,
-					Arrays.asList(new KeySchemaElement(ComDomain.PRIMARY_KEY, KeyType.HASH), new KeySchemaElement(ComDomain.SORT_KEY, KeyType.RANGE)),
-					Arrays.asList(new AttributeDefinition(ComDomain.PRIMARY_KEY, ScalarAttributeType.S), new AttributeDefinition(ComDomain.SORT_KEY, ScalarAttributeType.S)),
+			Table table = dynamoDB.createTable(DynamodbDomain.TABLE_NAME,
+					Arrays.asList(new KeySchemaElement(DynamodbDomain.PRIMARY_KEY, KeyType.HASH), new KeySchemaElement(DynamodbDomain.SORT_KEY, KeyType.RANGE)),
+					Arrays.asList(new AttributeDefinition(DynamodbDomain.PRIMARY_KEY, ScalarAttributeType.S), new AttributeDefinition(DynamodbDomain.SORT_KEY, ScalarAttributeType.S)),
 					new ProvisionedThroughput(1L, 1L));
 			
 			table.waitForActive();
@@ -55,19 +54,22 @@ public class CRUDBililngTable {
 
 	}
 
-	/**
-	 * key를 insert한다 
-	 */
-	public void insertData(String primaryKey, String sortKey, JsonObject obj) {
+	@Override
+	public void insertData(String primaryKey, String sortKey, String version, Map<String, String> map) {
 
-		Table table = dynamoDB.getTable(ComDomain.TABLE_NAME);
+		System.out.println("primaryKey: " + primaryKey);
+		System.out.println("sortKey: " + sortKey);
+		System.out.println("version: " + version);
 		
-		Item item = new Item().withPrimaryKey(ComDomain.PRIMARY_KEY, primaryKey, ComDomain.SORT_KEY, sortKey);
-
-		item.withString("111", "222");
-		item.withString("333", "444");
-		item.withString("555", "666");
+		Table table	= dynamoDB.getTable(DynamodbDomain.TABLE_NAME);
+		Item item 	= new Item().withPrimaryKey(DynamodbDomain.PRIMARY_KEY, primaryKey, DynamodbDomain.SORT_KEY, sortKey);
 		
+		item.withString(DynamodbDomain.VERSION, version);
+		item.withString(DynamodbDomain.SORT_KEY, sortKey);
+		
+		map.forEach((k, v) -> {
+			item.withString(k, v);
+		});
 		
 		table.putItem(item);
 		
